@@ -1,0 +1,227 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UNO Flip</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--a:#0f5132;--b:#052e1b}
+body.dk{--a:#3b1a63;--b:#10051f}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{font-family:Fredoka,'Trebuchet MS',system-ui,sans-serif;color:#fff;background:radial-gradient(circle at 50% 40%,var(--a),var(--b));transition:background .7s;display:flex;flex-direction:column;overflow:hidden}
+button,input,select{font:inherit}
+.btn{background:#ffd54a;color:#222;border:0;border-radius:12px;padding:10px 18px;font-weight:700;cursor:pointer;box-shadow:0 4px 0 #b8901c}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 #b8901c}
+#setup{margin:auto;max-width:460px;width:94%;background:#0007;padding:22px;border-radius:18px;overflow:auto;max-height:96vh}
+h1{margin:0 0 6px;font-size:36px}
+h1 b{background:linear-gradient(90deg,#e53935,#fdd835,#43a047,#1e88e5);-webkit-background-clip:text;background-clip:text;color:transparent}
+label{display:block;margin:10px 0 4px;font-size:14px;opacity:.85}
+input,select{width:100%;padding:9px 10px;border-radius:10px;border:0;background:#fff;color:#111}
+small{opacity:.75}
+#game{display:none;flex:1;flex-direction:column;min-height:0}
+#opps{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:10px 10px 22px}
+.opp{background:#0006;border:2px solid transparent;border-radius:14px;padding:8px 14px;min-width:120px;text-align:center;position:relative;transition:.3s}
+.opp.on{border-color:#ffd54a;box-shadow:0 0 18px #ffd54a99}
+.opp .n{font-weight:700}.opp .k{font-size:12px;opacity:.75}
+.mini{display:flex;justify-content:center;margin:6px 0 2px;height:32px;padding-left:12px}
+.mini i{width:22px;height:32px;border-radius:4px;border:2px solid #fff;margin-left:-12px}
+.bub{position:absolute;left:50%;top:100%;transform:translate(-50%,6px);background:#fff;color:#222;padding:3px 10px;border-radius:12px;font-size:13px;white-space:nowrap;z-index:5}
+#mid{flex:1;display:flex;align-items:center;justify-content:center;gap:34px;min-height:0}
+#mid.sp{animation:sp .8s}@keyframes sp{50%{transform:perspective(700px) rotateY(90deg)}}
+.pile{display:flex;flex-direction:column;align-items:center;gap:8px}
+.lbl{font-size:13px;opacity:.9}
+.card{width:70px;height:102px;border-radius:10px;border:4px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:30px;color:#fff;text-shadow:0 2px 0 #0005;flex:none;position:relative;user-select:none;transition:transform .15s}
+.card small{font-size:9px;letter-spacing:.5px;opacity:.95}
+.card.y{color:#222;text-shadow:none}
+.card.back{font-size:15px}
+.cc{position:absolute;right:-12px;bottom:-12px;width:28px;height:28px;border-radius:50%;border:3px solid #fff}
+#log{font-size:12px;opacity:.8;text-align:center;min-height:54px;padding:0 10px}
+#bar{display:flex;gap:12px;justify-content:center;align-items:center;padding:4px;font-weight:700;min-height:48px}
+#hand{display:flex;gap:8px;overflow-x:auto;padding:22px 14px 14px;justify-content:safe center}
+#hand .card{cursor:pointer}
+#hand .no{filter:brightness(.45);cursor:not-allowed}
+#hand .ok{transform:translateY(-12px);box-shadow:0 0 14px #fffa}
+#hand .ok:hover{transform:translateY(-24px)}
+#pick,#end{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;gap:12px;z-index:30;flex-wrap:wrap}
+#pick button{width:104px;height:104px;border:4px solid #fff;border-radius:16px;color:#fff;font-weight:700;font-size:18px;text-shadow:0 2px 0 #0006;cursor:pointer}
+#end{flex-direction:column;font-size:42px;font-weight:700;gap:20px}
+#toast{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.6);width:max-content;max-width:88vw;padding:10px 24px;border-radius:22px;background:#000a;text-align:center;font-size:clamp(22px,7vw,40px);line-height:1.2;font-weight:700;opacity:0;pointer-events:none;text-shadow:0 2px 8px #000;z-index:20}
+.opp.fin{opacity:.55}
+#toast.go{animation:pop 1.4s}
+@keyframes pop{15%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}75%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-75%) scale(1)}}
+@media(max-width:600px){.card{width:58px;height:86px;font-size:24px}#mid{gap:18px}}
+.fly{position:fixed;left:0;top:0;z-index:25;pointer-events:none;transform-style:preserve-3d;will-change:transform}
+.fc{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.fc.bk{transform:rotateY(180deg)}
+.land{animation:land .32s}@keyframes land{40%{transform:scale(1.15)}}
+body::before,body::after{content:'';position:fixed;inset:0;z-index:-1;background-size:140% 140%;animation:drift 28s ease-in-out infinite alternate;transition:opacity .9s}
+@keyframes drift{to{background-position:100% 100%}}
+body::before{background-image:repeating-linear-gradient(45deg,#ffffff0a 0 14px,transparent 14px 28px),radial-gradient(ellipse at 50% 55%,#ffffff26,transparent 55%),radial-gradient(55% 50% at 12% 10%,#e5393599,transparent 70%),radial-gradient(50% 45% at 92% 14%,#fdd83577,transparent 70%),radial-gradient(55% 50% at 90% 92%,#1e88e599,transparent 70%),radial-gradient(50% 50% at 8% 90%,#43a04799,transparent 70%),radial-gradient(circle at 50% 50%,#13804e,#0a4a30 50%,#04281a)}
+body::after{opacity:0;background-image:repeating-linear-gradient(-45deg,#ffffff0a 0 14px,transparent 14px 28px),radial-gradient(ellipse at 50% 55%,#ffffff1f,transparent 55%),radial-gradient(55% 50% at 12% 10%,#ec407a99,transparent 70%),radial-gradient(50% 45% at 92% 14%,#00acc177,transparent 70%),radial-gradient(55% 50% at 90% 92%,#fb8c0088,transparent 70%),radial-gradient(50% 50% at 8% 90%,#7e57c2aa,transparent 70%),radial-gradient(circle at 50% 50%,#3d1d73,#1c0b3c 50%,#09031a)}
+body.dk::after{opacity:1}
+#sb{font-size:18px;font-weight:500;text-align:center;line-height:1.7;padding:0 16px}
+#mt{position:fixed;right:10px;top:10px;z-index:15;background:#0006;border:0;border-radius:50%;width:38px;height:38px;color:#fff;font-size:18px;cursor:pointer}
+body.shk #game{animation:shk .45s}@keyframes shk{20%{transform:translate(-8px,4px)}40%{transform:translate(8px,-4px)}60%{transform:translate(-6px,2px)}80%{transform:translate(5px,-2px)}}
+@media(prefers-reduced-motion:reduce){#mid.sp,#toast.go,.land,body::before,body::after,body.shk #game{animation:none}}
+</style></head><body>
+<div id="setup"><h1><b>UNO Flip</b></h1>
+<small>Kartu tambah +1 sampai +5 di sisi terang, +6 sampai +10 di sisi gelap, dan bisa ditumpuk. Kartu kembar (angka atau jenis sama, warna bebas) boleh dimainkan dua kali dalam satu giliran. Mode turnamen: permainan lanjut sampai semua pemain berperingkat, termasuk saat kamu sudah selesai dan tinggal menonton bot. Lawanmu adalah bot lokal.</small>
+<label>Jumlah pemain (kamu + bot)</label>
+<select id="np"><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option></select>
+<label>Nama kamu</label><input id="nm" placeholder="Kamu">
+<input id="model" type="hidden" value="gemini-2.5-flash">
+<div id="keys"></div>
+<p><small>Halaman online tidak bisa memanggil API Gemini. Untuk lawan bot Gemini dengan API key, unduh file HTML-nya dan buka di browser.</small></p>
+<button class="btn" id="go" style="width:100%">Mulai main</button></div>
+<div id="game"><button id="mt" onclick="mute=!mute;this.textContent=mute?'🔇':'🔊'">🔊</button><div id="opps"></div><div id="mid"></div><div id="log"></div>
+<div id="bar"><span id="st"></span><button class="btn" id="pass" onclick="doPass()">Lewati</button><button class="btn" onclick="sortH()" style="padding:8px 14px">Urutkan</button></div><div id="hand"></div></div>
+<div id="pick"></div><div id="toast"></div>
+<div id="end"><div id="endt"></div><div id="sb"></div><div><button class="btn" onclick="$('#end').style.display='none';newRound()">Ronde berikutnya</button> <button class="btn" onclick="again()">Menu</button></div></div>
+<script>
+const $=s=>document.querySelector(s),cl=s=>String(s).replace(/[<>&"]/g,'').slice(0,70);
+const COL={merah:'#e53935',kuning:'#fdd835',hijau:'#43a047',biru:'#1e88e5',pink:'#ec407a',teal:'#00acc1',oranye:'#fb8c00',ungu:'#7e57c2'};
+const SIDES=[['merah','kuning','hijau','biru'],['pink','teal','oranye','ungu']];
+const WBG=SIDES.map(s=>`conic-gradient(${s.map((c,i)=>`${COL[c]} ${i*25}% ${i*25+25}%`).join(',')})`);
+const BN=['Gemi','Nova','Vega','Lyra','Rigel'];
+const PER=[['😈','agresif: suka menumpuk dan menyerang dengan kartu tambah'],['🛡️','hati-hati: menyimpan kartu spesial, menyerang saat lawan hampir menang'],['🤡','jahil: suka Flip dan Wild Warna untuk mengerjai, banyak meledek'],['🧠','taktis dan dingin: selalu menghitung kartu lawan'],['🔥','pendendam: membalas siapa pun yang menyerangnya']];
+const pv=f=>f.t=='n'?f.v:f.t[0]=='w'?50:20;
+let AC,mute=0;
+const SF={play:[[330,.07],[520,.09]],draw:[[700,.05],[500,.06]],flip:[[260,.1],[520,.1],[780,.12]],hit:[[150,.18],[110,.25]],win:[[523,.12],[659,.12],[784,.12],[1047,.3]],uno:[[880,.1],[880,.1]]};
+function snd(k){if(mute)return;try{AC=AC||new AudioContext();let t=AC.currentTime;for(const[f,d]of SF[k]){const o=AC.createOscillator(),g=AC.createGain();o.type=k=='hit'?'sawtooth':'triangle';o.frequency.value=f;g.gain.setValueAtTime(.15,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d);t+=d*.8}}catch(e){}}
+function shake(){const b=document.body;b.classList.remove('shk');void b.offsetWidth;b.classList.add('shk')}
+function confetti(){if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;for(let i=0;i<60;i++){const e=document.createElement('i');e.style.cssText=`position:fixed;left:${Math.random()*innerWidth}px;top:-20px;width:9px;height:14px;z-index:40;pointer-events:none;background:${Object.values(COL)[i%8]}`;document.body.append(e);e.animate([{transform:'rotate(0)'},{transform:`translate(${Math.random()*200-100}px,${innerHeight+40}px) rotate(${Math.random()*900}deg)`}],{duration:1800+Math.random()*1800,delay:Math.random()*600,easing:'ease-in'}).onfinish=()=>e.remove()}}
+function sortH(){if(G.busy||G.over)return;const o={};SIDES[G.s].forEach((c,i)=>o[c]=i);P[0].hand.sort((a,b)=>{const x=F(a),y=F(b);return(o[x.c]??9)-(o[y.c]??9)||(x.t>y.t?1:x.t<y.t?-1:0)||(x.v||0)-(y.v||0)});render()}
+let G,P,N,MODEL;
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function mkDeck(){
+ const S=[[],[]];
+ [0,1].forEach(s=>SIDES[s].forEach(c=>{const A=S[s];
+  for(let n=1;n<=9;n++)A.push({c,t:'n',v:n},{c,t:'n',v:n});
+  for(let k=1;k<=5;k++)A.push({c,t:'d',v:k+5*s});
+  A.push({c,t:'r'},{c,t:'r'},{c,t:'s'},{c,t:'s'})}));
+ shuf(S[1]);
+ const D=S[0].map((l,i)=>({l,d:S[1][i]}));
+ SIDES[0].forEach((c,i)=>{const e=SIDES[1][i];for(let k=0;k<2;k++)D.push({l:{c,t:'f'},d:{c:e,t:'f'}})});
+ for(let i=0;i<4;i++)D.push({l:{t:'w'},d:{t:'w'}},{l:{t:'wd',v:2},d:{t:'wc'}});
+ return shuf(D)}
+const F=c=>G.s?c.d:c.l,TOP=()=>G.disc[G.disc.length-1];
+const isD=f=>f.t=='d'||f.t=='wd',wild=f=>f.t[0]=='w';
+const ok=c=>{const f=F(c),t=F(TOP());
+ if(G.tw)return f.t==G.tw.t&&f.v==G.tw.v;
+ if(G.drew&&c!==G.last)return false;
+ if(G.pend)return isD(f);
+ return wild(f)||f.c==G.col||(f.t==t.t&&f.v==t.v)};
+const desc=f=>(f.c?f.c+' ':'')+(f.t=='n'?f.v:f.t=='d'?'+'+f.v:{r:'Balik',s:G.s?'LewatiSemua':'Lewati',f:'Flip',w:'Wild',wd:'Wild+2',wc:'WildWarna'}[f.t]);
+const SYM={n:f=>f.v,d:f=>'+'+f.v,r:()=>'⇄',s:()=>G.s?'⊘⊘':'⊘',f:()=>'⟲',w:()=>'✦',wd:()=>'+2',wc:()=>'✦'};
+const CAP={n:()=>'',d:()=>'TAMBAH',r:()=>'BALIK',s:()=>G.s?'SEMUA':'LEWATI',f:()=>'FLIP',w:()=>'WILD',wd:()=>'WILD',wc:()=>'WARNA'};
+const cardEl=(c,cls='',i='')=>{const f=F(c);return `<div class="card ${cls} ${f.c=='kuning'?'y':''}" data-i="${i}" style="background:${wild(f)?WBG[G.s]:COL[f.c]}">${SYM[f.t](f)}<small>${CAP[f.t]()}</small></div>`};
+function log(t){G.lg.push(t)}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.remove('go');void e.offsetWidth;e.classList.add('go')}
+function drawOne(i){if(!G.deck.length){const t=G.disc.pop();G.deck=shuf(G.disc);G.disc=[t]}
+ const c=G.deck.pop();if(c){P[i].hand.push(c);G.fx.push({k:'draw',who:i})}return c}
+function give(i,n){let k=0;while(k<n&&drawOne(i))k++;return k}
+const A=()=>P.filter(q=>!q.rk).length,mv=k=>{while(k-->0){do{G.cur=((G.cur+G.dir)%N+N)%N}while(P[G.cur].rk)}},nx=()=>{let i=G.cur;do{i=((i+G.dir)%N+N)%N}while(P[i].rk);return i};
+const endT=()=>{G.drew=false;G.tw=null;mv(1+Math.min(G.sk||0,A()-1));G.sk=0;turn()};
+function doPlay(idx,color){
+ const p=P[G.cur],c=p.hand.splice(idx,1)[0],f=F(c),two=!!G.tw;let sk=G.sk||0;G.tw=null;
+ const se=$(G.cur?`#opps .opp:nth-child(${G.cur}) .mini`:`#hand .card[data-i="${idx}"]`);
+ if(se)G.fx.push({k:'play',a:pt(se,G.cur),h:cardEl(c),bot:G.cur>0});
+ snd('play');G.disc.push(c);G.col=wild(f)?color:f.c;G.drew=false;
+ log(`${p.name} main ${desc(f)}${wild(f)?' → '+color:''}`);
+ if(f.t=='r'){if(A()==2)sk++;else G.dir*=-1}
+ else if(f.t=='s')sk=G.s?A()-1:sk+1;
+ else if(f.t=='f'){snd('flip');G.s^=1;G.col=F(c).c;toast('FLIP! '+(G.s?'Sisi gelap 🌑':'Sisi terang ☀️'));
+  const m=$('#mid');m.classList.remove('sp');void m.offsetWidth;m.classList.add('sp')}
+ else if(isD(f)){G.pend+=f.v;toast('+'+G.pend)}
+ else if(f.t=='wc'){const t=nx();let n=0,x;while(n<60&&(x=drawOne(t))){n++;if(F(x).c==G.col)break}
+  log(`${P[t].name} ambil ${n} kartu sampai dapat ${G.col}`);toast(`${P[t].name} +${n}`);sk++}
+ if(!p.hand.length){p.rk=++G.fin;const al=P.filter(q=>!q.rk);if(al.length<2){if(al[0])al[0].rk=++G.fin;return win()}toast(`${p.name} selesai: peringkat ${p.rk} 🏅`);snd('uno');log(`${p.name} selesai di peringkat ${p.rk}`);if(f.t=='s'&&G.s)sk=0}
+ if(p.hand.length==1){snd('uno');toast('UNO! '+p.name)}
+ if(!two&&p.hand.some(x=>F(x).t==f.t&&F(x).v==f.v)){G.tw={t:f.t,v:f.v};G.sk=sk;toast('Kartu kembar! Main lagi');return turn()}
+ G.sk=0;mv(1+Math.min(sk,A()-1));turn()}
+function doDraw(){
+ const p=P[G.cur];
+ if(G.pend){snd('hit');if(G.pend>=8)shake();const n=give(G.cur,G.pend);log(`${p.name} ambil +${n} kartu`);toast(`${p.name} ambil ${n}!`);G.pend=0;return endT()}
+ const c=drawOne(G.cur);snd('draw');log(`${p.name} ambil 1 kartu`);
+ if(c&&ok(c)){G.drew=true;G.last=c;turn()}else endT()}
+const doPass=()=>{if(!G.busy&&(G.drew||G.tw))endT()};
+function win(){G.over=1;render();snd('win');
+ const o=[...P].sort((a,b)=>a.rk-b.rk);o.forEach(q=>q.score=(q.score||0)+N-q.rk);
+ $('#endt').textContent=o[0].bot?`${o[0].name} juara! 😤`:'Kamu juara! 🏆';
+ $('#sb').innerHTML=o.map(q=>`${['🥇','🥈','🥉'][q.rk-1]||q.rk+'.'} ${q.name} <small>+${N-q.rk} poin · total ${q.score}</small>`).join('<br>');
+ setTimeout(()=>{$('#end').style.display='flex';if(P[0].rk==1)confetti()},900)}
+function turn(){G.busy=P[G.cur].bot&&!G.over;render();if(G.busy)setTimeout(botMove,P[0].rk?500:1100)}
+function pickColor(cb){const m=$('#pick');m.innerHTML=SIDES[G.s].map(c=>`<button style="background:${COL[c]}" data-c="${c}">${c}</button>`).join('');m.style.display='flex';
+ m.onclick=e=>{const c=e.target.dataset.c;if(c){m.style.display='none';cb(c)}}}
+function clickCard(i){if(G.busy||G.over||G.cur)return;const c=P[0].hand[i];if(!c||!ok(c))return;
+ wild(F(c))?pickColor(col=>doPlay(i,col)):doPlay(i)}
+function clickPile(){if(G.busy||G.over||G.cur||G.drew||G.tw)return;doDraw()}
+function bestCol(p,x){const m={};p.hand.forEach(c=>{if(c!==x){const k=F(c).c;if(k)m[k]=(m[k]||0)+1}});
+ return Object.keys(m).sort((a,b)=>m[b]-m[a])[0]||SIDES[G.s][0]}
+function heur(p,lg){const n=P[nx()].hand.length;
+ const s=lg.map(i=>{const f=F(p.hand[i]);return[i,(isD(f)?(n<=3||G.pend?5:2):0)+(f.t=='n'?1:0)-(wild(f)?1:0)+Math.random()*2]}).sort((a,b)=>b[1]-a[1]);
+ return{action:'play',index:s[0][0],chat:''}}
+async function gem(p,lg){
+ const t=F(TOP()),ord=P.map((_,k)=>P[((G.cur+G.dir*(k+1))%N+N)%N]).filter(q=>q!==p&&!q.rk);
+ const prompt=`Kamu "${p.name}", pemain UNO Flip yang licik dan jenaka. Kepribadian: ${PER[BN.indexOf(p.name)][1]}. Balas HANYA JSON.
+Sisi papan: ${G.s?'GELAP':'TERANG'}. Kartu teratas: ${desc(t)}. Warna aktif: ${G.col}.
+${G.pend?`SERANGAN: tumpuk dengan kartu tambah (+N) atau ambil ${G.pend} kartu.`:''}
+Tangan kamu: ${p.hand.map((c,i)=>`[${i}] ${desc(F(c))}`).join(', ')}.
+Lawan sesuai urutan giliran: ${ord.map(q=>`${q.name} (${q.hand.length} kartu)`).join(', ')}.
+Indeks kartu legal: [${lg}]. ${G.tw?'Kamu punya kartu KEMBAR: mainkan satu lagi ("play") atau akhiri giliran ("pass").':G.drew?'Kamu baru mengambil kartu: pilih "play" atau "pass".':'Kamu boleh "draw" untuk mengambil kartu.'}
+Aturan: kartu tambah +1..+5 di sisi terang, +6..+10 di sisi gelap, bisa ditumpuk. Kartu kembar (angka/jenis sama, warna bebas) boleh dimainkan 2x dalam satu giliran. Wild Warna (gelap) membuat lawan berikutnya mengambil kartu sampai dapat warna pilihanmu. Flip membalik semua kartu ke sisi lain. Habiskan kartumu lebih dulu; serang lawan yang kartunya sedikit.
+Warna valid untuk wild: ${SIDES[G.s].join(', ')}.
+Format: {"action":"play|draw|pass","index":0,"color":"warna jika wild","chat":"komentar lucu bahasa Indonesia maks 8 kata"}`;
+ try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),25000);
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,{method:'POST',signal:ac.signal,
+   headers:{'Content-Type':'application/json','x-goog-api-key':p.key},
+   body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.8,responseMimeType:'application/json'}})});
+  clearTimeout(tm);const j=await r.json();if(j.error)throw new Error(j.error.message);
+  p.err=0;const o=JSON.parse(j.candidates[0].content.parts[0].text.replace(/```json|```/g,''));return Array.isArray(o)?o[0]:o
+ }catch(e){p.err=1;log('⚠ '+p.name+': '+cl(e.message||e)+' (pakai bot lokal)')}}
+async function botMove(){
+ if(G.over)return;const p=P[G.cur],lg=p.hand.map((c,i)=>ok(c)?i:-1).filter(i=>i>=0);let a;
+ if(!lg.length)a={action:'draw'};
+ else{if(p.key)a=await gem(p,lg);
+  const v=a&&(a.action=='draw'&&!G.drew&&!G.tw||a.action=='pass'&&(G.drew||G.tw)||a.action=='play'&&lg.includes(+a.index));
+  if(!v)a=heur(p,lg)}
+ p.say=cl(a.chat||'');
+ if(a.action=='play'){const i=+a.index,f=F(p.hand[i]);
+  doPlay(i,wild(f)?(SIDES[G.s].includes(a.color)?a.color:bestCol(p,p.hand[i])):0)}
+ else if(a.action=='pass')endT();else doDraw()}
+function pt(e,m){const r=e.getBoundingClientRect(),w=$('#mid .card').offsetWidth;return{x:r.left+r.width/2,y:r.top+r.height/2,s:m?0.4:r.width/w}}
+function fly(a,b,h,ba,bb,dl,done){
+ const k=$('#mid .card'),w=k.offsetWidth,hh=k.offsetHeight,e=document.createElement('div');
+ e.className='fly';e.style.cssText=`width:${w}px;height:${hh}px`;
+ e.innerHTML=`<div class="fc">${h}</div><div class="fc bk"><div class="card back" style="background:${WBG[1-G.s]}">FLIP</div></div>`;
+ document.body.append(e);
+ const T=(p,r)=>`translate(${p.x-w/2}px,${p.y-hh/2}px) perspective(700px) rotateY(${r}deg) scale(${p.s})`;
+ e.animate([{transform:T(a,ba?180:0)},{transform:T(b,bb?180:0)}],{duration:480,delay:dl,easing:'cubic-bezier(.25,.8,.25,1)',fill:'both'}).onfinish=()=>{e.remove();done&&done()}}
+function fx(){
+ const q=G.fx.splice(0);if(!q.length||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+ const pile=$('#mid .card'),top=$('#mid .pile:nth-child(2) .card'),hs=[...document.querySelectorAll('#hand .card')],pl=q.filter(f=>f.k=='play'),b=pl.length?380:0,cnt={};
+ pl.forEach(f=>{top.style.visibility='hidden';fly(f.a,pt(top),f.h,f.bot,0,0,()=>{top.style.visibility='';top.classList.add('land')})});
+ q.forEach(f=>{if(f.k=='draw')cnt[f.who]=(cnt[f.who]||0)+1});
+ for(const w in cnt){const n=Math.min(cnt[w],8);
+  if(+w){const o=$(`#opps .opp:nth-child(${w}) .mini`);for(let i=0;i<n;i++)fly(pt(pile),pt(o,1),'',1,1,b+i*60)}
+  else hs.slice(-n).forEach((c,i)=>{const h=c.outerHTML;c.style.visibility='hidden';fly(pt(pile),pt(c),h,1,0,b+i*70,()=>{c.style.visibility=''})})}}
+function render(){
+ const bk=WBG[1-G.s];document.body.classList.toggle('dk',!!G.s);
+ $('#opps').innerHTML=P.slice(1).map((p,k)=>`<div class="opp ${G.cur==k+1?'on':''} ${p.rk?'fin':''}"><div class="n">${PER[k][0]} ${p.name}</div><div class="k">${p.key?'Gemini':'Bot lokal'}${p.err?' ⚠':''}</div><div class="mini">${p.hand.slice(0,12).map(()=>`<i style="background:${bk}"></i>`).join('')}</div><div class="k">${p.rk?'🏅 Peringkat '+p.rk:p.hand.length+' kartu'} · ${p.score||0} poin</div>${p.say?`<div class="bub">${p.say}</div>`:''}</div>`).join('');
+ $('#mid').innerHTML=`<div class="pile" style="cursor:pointer" onclick="clickPile()"><div class="card back" style="background:${bk}">FLIP</div><div class="lbl">${G.pend?'Ambil +'+G.pend:'Tarik kartu'} (${G.deck.length})</div></div>
+ <div class="pile"><div style="position:relative">${cardEl(TOP())}<span class="cc" style="background:${COL[G.col]}"></span></div><div class="lbl">${G.dir>0?'↻':'↺'} warna ${G.col}</div></div>`;
+ const me=!G.busy&&!G.over&&G.cur==0;
+ $('#hand').innerHTML=P[0].hand.map((c,i)=>cardEl(c,me&&ok(c)?'ok':'no',i)).join('');
+ $('#log').innerHTML=G.lg.slice(-3).map(x=>`<div>${x}</div>`).join('');
+ $('#st').textContent=G.over?'':P[0].rk?`Kamu peringkat ${P[0].rk} 🏅 menonton ${P[G.cur].name}…`:G.cur?`${P[G.cur].name} sedang berpikir…`:G.tw?'Kartu kembar! Mainkan 1 kartu yang sama lagi, atau Selesai':G.pend?`Tumpuk kartu tambah atau ambil ${G.pend}!`:G.drew?'Mainkan kartu yang baru diambil, atau lewati':'Giliranmu';
+ $('#pass').style.display=me&&(G.drew||G.tw)?'':'none';$('#pass').textContent=G.tw?'Selesai':'Lewati';fx()}
+$('#hand').onclick=e=>{const d=e.target.closest('.card');if(d)clickCard(+d.dataset.i)};
+function mkKeys(){$('#keys').innerHTML=[...Array(+$('#np').value-1)].map((_,i)=>'').join('')}
+$('#np').onchange=mkKeys;mkKeys();
+$('#go').onclick=()=>{
+ N=+$('#np').value;MODEL=$('#model').value.trim()||'gemini-2.5-flash';
+ const ks=Array(N-1).fill('');
+ P=[{name:cl($('#nm').value.trim()||'Kamu'),hand:[]},...ks.map((k,i)=>({name:BN[i],key:k,bot:1,hand:[]}))];
+ P.forEach(p=>p.score=0);newRound()};
+function newRound(){P.forEach(p=>{p.hand=[];p.rk=0;p.say=''});const deck=mkDeck();G={deck,disc:[],s:0,dir:1,cur:0,pend:0,drew:false,over:0,busy:0,lg:['Game dimulai!'],fx:[],fin:0};
+ G.disc.push(deck.splice(deck.findIndex(c=>c.l.t=='n'),1)[0]);G.col=TOP().l.c;
+ for(let k=0;k<7;k++)P.forEach((_,i)=>drawOne(i));
+ $('#setup').style.display='none';$('#game').style.display='flex';$('#end').style.display='none';turn()};
+function again(){$('#end').style.display='none';$('#game').style.display='none';$('#setup').style.display='';document.body.classList.remove('dk')}
+</script></body></html>
